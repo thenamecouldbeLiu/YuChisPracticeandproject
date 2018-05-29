@@ -33,17 +33,23 @@ def Crawler(start_Url, author_Name =None, key_Word=None, Max_Number_Of_Pages= No
     if key_Word==None and author_Name==None:
         print("You need to give author or keywords")
     else:
-        if Max_Number_Of_Pages == None:
-            while True:
-                Request_Current_Url = requests.get(Current_Url)
-                next_Url ="https://www.ptt.cc" +bs(Request_Current_Url.text,"lxml").select("div.btn-group-paging a")[1]["href"]
-                Current_Soup = bs(Request_Current_Url.text,"lxml").select(".r-ent")
-                mainfunction(Current_Soup,author_Name, key_Word)
-                Current_Url = next_Url
-        else:
-            for i in  range(Max_Number_Of_Pages):
-                Request_Current_Url = requests.get(Current_Url)
-                next_Url ="https://www.ptt.cc" +bs(Request_Current_Url.text,"lxml").select("div.btn-group-paging a")[1]["href"]
-                Current_Soup = bs(Request_Current_Url.text,"lxml").select(".r-ent")
-                mainfunction(Current_Soup,author_Name, key_Word)
-                Current_Url = next_Url
+        try:
+            if Max_Number_Of_Pages == None:
+                while True:
+                    Request_Current_Url = requests.get(Current_Url)
+                    next_Url ="https://www.ptt.cc" +bs(Request_Current_Url.text,"lxml").select("div.btn-group-paging a")[1]["href"]
+                    Current_Soup = bs(Request_Current_Url.text,"lxml").select(".r-ent")
+                    mainfunction(Current_Soup,author_Name, key_Word)
+                    Current_Url = next_Url
+            else:
+                for i in  range(Max_Number_Of_Pages):
+                    Request_Current_Url = requests.get(Current_Url)
+                    next_Url ="https://www.ptt.cc" +bs(Request_Current_Url.text,"lxml").select("div.btn-group-paging a")[1]["href"]
+                    Current_Soup = bs(Request_Current_Url.text,"lxml").select(".r-ent")
+                    mainfunction(Current_Soup,author_Name, key_Word)
+                    Current_Url = next_Url
+        except KeyError:
+            pass
+        
+        finally:
+            print("\nCrawling Finished")
