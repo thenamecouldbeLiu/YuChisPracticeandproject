@@ -56,7 +56,7 @@ def Crawler(start_Url, author_Name =None, key_Word=None, Max_Number_Of_Pages= No
                     mainfunction(Current_Soup,author_Name, key_Word)
                     Current_Url = next_Url
         except KeyError:
-#            有錯誤就跳過，到最後一個會跳到fianlly印出結束
+#            有錯誤就跳過(通常是因為到底了)，到最後一個會跳到fianlly印出結束
             pass
         
         finally:
