@@ -17,7 +17,7 @@ class static_describe(object):
     def __init__(self,file):
         self.file_df  =pd.read_excel(file)
         self.emotion_list =['中立', '正面','負面']
-    def findStatic(self):
+    def findStatic(self, save_txt=None):
         
         wanted_infor =['標題', '點閱數', '正面強度', '負面強度', '情緒標記']
         
@@ -97,7 +97,7 @@ class static_describe(object):
             for emo in self.emotion_list:
                 filter_emo = (df['情緒標記']==emo) & (df["來源"]==select_filter)
                 emotion_dict[str(select_filter+emo)+"總和"] = (len(df[filter_emo]),)
-        return emotion_dict.values(), emotion_dict.keys()
+        return emotion_dict
     def getEomtionAverageDict(self, source_select_filter ="All", click =None):
         df = self.file_df
         if click !=None:
@@ -127,9 +127,9 @@ class static_describe(object):
         df = self.file_df
         if click !=None:
             df = df[df["點閱數"]>click]
-#        return(df)
+
         '''返回目前用的標籤與平均值，用來畫圖'''
-        emotion_dict = {}#選取的標籤為KEY, 取得值為Value
+        emotion_dict = {}#選取的標籤為KEY, 篩選後值為Value
         if source_select_filter=="All":
             for emo in self.emotion_list:
                 try:
@@ -139,7 +139,6 @@ class static_describe(object):
         else:
             filted_df = df[df["來源"]==source_select_filter]
 #        字典的值須為Tuple才能正常繪圖
-#            print(emo_filted_df)
             for emo in self.emotion_list:
                 try:
                     emo_filted_df = filted_df[emo+"強度"]
@@ -147,7 +146,83 @@ class static_describe(object):
                 except:
                     emotion_dict[str(source_select_filter+emo)+"強度標準差"] =0
         return emotion_dict
+    def getCampareSumDict(self,data_source=["淘寶.xlsx", "蝦皮.xlsx","PChome.xlsx"],select_filter ="All",click = None):
+        '''例如:找點擊數5000以上, 並以"討論區", "正面"來篩選總和'''
+        compareSum_dict ={}
+        for data in data_source:
+            data_df = pd.read_excel(data)
+            if click!=None:
+                data_df= data_df[data_df["點閱數"]>click]
+            if select_filter=="All":
+                for emo in self.emotion_list:
+                    filted_df =data_df[data_df["情緒標記"]==emo]
+                    compareSum_dict[data+emo+" 總和"]=(len(filted_df),)
+            else:
+                filted_df = data_df[data_df["來源"]==select_filter]
+                for emo in self.emotion_list:
+                    emo_filted_df =filted_df[filted_df["情緒標記"]==emo]
+                    compareSum_dict[data+" 點擊大於 "+str(click)+"的"+select_filter+str(emo)+"總和"] = (len(emo_filted_df),)
+        return compareSum_dict
+                        
 
+    def getCompareMeanDict(self,data_source=["淘寶.xlsx", "蝦皮.xlsx","PChome.xlsx"],select_filter ="All",click = None):
+        '''例如:找點擊數5000以上, 並以"討論區", "正面"來篩選之後平均'''
+        compareMeanDict ={}
+#        print(self.emotion_list)
+        for data in data_source:
+            data_df = pd.read_excel(data)
+            if click!=None:
+                data_df= data_df[data_df["點閱數"]>click]
+            if select_filter=="All":
+#                print(len(data_df))
+                for emo in self.emotion_list:
+                    try:
+#                        print(emo, data)
+                        compareMeanDict[data,emo,"強度平均"]=((data_df[emo+"強度"]).mean(),)
+                    except:
+                        compareMeanDict[data,emo,"強度平均"]=(0,)
+            else:
+                filted_df = data_df[data_df["來源"]==select_filter]
+#                print(filted_df)
+                for emo in self.emotion_list:
+                    try:
+#                        print("suessess")
+                        emo_filted_df= filted_df[emo+"強度"]
+
+                        compareMeanDict[data+" 點擊大於 "+str(click)+"的"+select_filter+str(emo)+"強度平均"] = (emo_filted_df.mean(),)
+                    except KeyError:
+#                        print("fail,Key",emo)
+                        compareMeanDict[data+" 點擊大於 "+str(click)+"的"+select_filter+str(emo)+"強度平均"]=(0,)
+        return compareMeanDict
+    def getCompareStdDict(self,data_source=["淘寶.xlsx", "蝦皮.xlsx","PChome.xlsx"],select_filter ="All",click = None):
+        '''例如:找點擊數5000以上, 並以"討論區", "正面"來篩選之後平均'''
+        compareMeanDict ={}
+#        print(self.emotion_list)
+        for data in data_source:
+            data_df = pd.read_excel(data)
+            if click!=None:
+                data_df= data_df[data_df["點閱數"]>click]
+            if select_filter=="All":
+#                print(len(data_df))
+                for emo in self.emotion_list:
+                    try:
+#                        print(emo, data)
+                        compareMeanDict[data,emo,"強度標準差"]=((data_df[emo+"強度"]).std(),)
+                    except:
+                        compareMeanDict[data,emo,"強度標準差"]=(0,)
+            else:
+                filted_df = data_df[data_df["來源"]==select_filter]
+#                print(filted_df)
+                for emo in self.emotion_list:
+                    try:
+#                        print("suessess")
+                        emo_filted_df= filted_df[emo+"強度"]
+
+                        compareMeanDict[data+" 點擊大於 "+str(click)+"的"+select_filter+str(emo)+"強度標準差"] = (emo_filted_df.std(),)
+                    except KeyError:
+#                        print("fail,Key",emo)
+                        compareMeanDict[data+" 點擊大於 "+str(click)+"的"+select_filter+str(emo)+"強度標準差"]=(0,)
+        return compareMeanDict
 def generate_models(x, y, degs):
     """
     Generate regression models by fitting a polynomial for each degree in degs
@@ -190,31 +265,40 @@ def r_squared(y, estimated):
             continue
     return 1-float(numerator/denominator)
 
-def barGraphPlot(data,xlabel=None,ylabel=None, settitle=None,figureName = None):
+def barGraphPlot(data,xlabel=None,ylabel=None, graphTitle=None,figureName = None,save_graph =False):
     print(data)
     graph = pd.DataFrame(data)
-    test_graph=graph.plot(kind="bar", grid=True,legend =True,title = settitle, figsize= (8,10), fontsize =15)
+    test_graph=graph.plot(kind="bar", grid=True,legend =True,title = graphTitle, figsize= (8,10), fontsize =15)
     test_graph.set_ylabel(ylabel,fontsize =15)
     test_graph.set_xlabel(xlabel,fontsize =20)
-    if figureName!= None:
+    if figureName!= None and save_graph:
         plt.savefig(figureName)
+    plt.title(graphTitle)
     plt.show()
 
-def pieGraphPlot(data,xlabel=None,ylabel=None, settitle=None,figureName = None):
+def pieGraphPlot(data,xlabel=None,ylabel=None, graphTitle=None,figureName = None, save_graph =False):
     print(data)
     plt.axes(aspect='equal')
-    plt.pie(x= data[0],labels=data[1],autopct='%1.2f%%',pctdistance=0.8, radius = 1.5,textprops = {'fontsize':18, 'color':'k'})
-    if figureName!= None:
+    plt.pie(x= data.values(),labels=data.keys(),autopct='%1.2f%%',pctdistance=0.8, radius = 1.5,textprops = {'fontsize':18, 'color':'k'})
+    if figureName!= None and save_graph:
         plt.savefig(figureName)
+    plt.title(graphTitle)
     plt.show()
-for data in ["淘寶.xlsx", "蝦皮.xlsx","PChome.xlsx"]:
-    print("*"*15,"Now showing data analysis of",data,"*"*15)
-    testClass =static_describe(data)
-    testClass.findStatic()
-    for item in ["All","討論區", "社群網站"]:
-        pieGraphPlot(testClass.getEomtionNumberDict(item), "Emotion", "Number", (data+" "+item+" "+"Total"), figureName=data+item+"總和圓餅圖.jpg")
-        barGraphPlot(testClass.getEomtionAverageDict(item), "Emotion", "Number", data+" "+item+" "+"Average",figureName=data+item+"情緒強度平均直條圖.jpg")
-        barGraphPlot(testClass.getEomtionStdDict(item), "Emotion", "Number", data+" "+item+" "+"Std",figureName=data+item+"情緒強度標準差直條圖.jpg")
+    
+testClass =static_describe("淘寶.xlsx")
+#    testClass.findStatic()
+#print(testClass.getCompareStdDict(select_filter = "討論區"))
+#for data in ["淘寶.xlsx", "蝦皮.xlsx","PChome.xlsx"]:
+#    print("*"*15,"Now showing data analysis of",data,"*"*15)
+#
+#    for item in ["All"]:
+#        barGraphPlot(testClass.getEomtionNumberDict(item), "Emotion", "Number", graphTitle= (data+" "+item+" "+"Total"), figureName=data+item+"總和直條圖.jpg",save_graph=True)
+#        pieGraphPlot(testClass.getEomtionNumberDict(item),graphTitle= "情緒分布圓餅圖",save_graph=True)
+#        barGraphPlot(testClass.getEomtionAverageDict(item), "Emotion", "Number", graphTitle=data+" "+item+" "+"Average",figureName=data+item+"情緒強度平均直條圖.jpg",save_graph=True)
+#        barGraphPlot(testClass.getEomtionStdDict(item), "Emotion", "Number", graphTitle=data+" "+item+" "+"Std",figureName=data+item+"情緒強度標準差直條圖.jpg",save_graph=True)
+#barGraphPlot(testClass.getCampareSumDict(select_filter="All"),"Emotion", "Number", graphTitle=("資料總和比較直條圖.jpg"), figureName="資料總和比較直條圖.jpg",save_graph=True)
+#barGraphPlot(testClass.getCompareMeanDict(select_filter="All"),"Emotion", "Number", graphTitle=("資料平均比較直條圖"), figureName="資料平均比較直條圖.jpg",save_graph=True)
+#barGraphPlot(testClass.getCompareStdDict(select_filter="All"),"Emotion", "Number", graphTitle=("資料標準差比較直條圖"), figureName="資料標準差比較直條圖.jpg",save_graph=True)
 
 #testClass.findStatic()
 #print("click>5000 average",testClass.getEomtionAverageDict(click=5000))
